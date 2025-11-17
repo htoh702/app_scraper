@@ -15,8 +15,6 @@ class ReviewAnalyzer:
         
     def get_last_month_files(self):
         """전달 데이터 파일 수집"""
-        today = datetime.now()
-        last_month = today - timedelta(days=30)
         
         # 전달의 모든 날짜 패턴 생성
         all_files = glob.glob(os.path.join(self.data_dir, "*.csv"))
@@ -42,11 +40,10 @@ class ReviewAnalyzer:
                 file_date = datetime.strptime(date_str, "%Y%m%d")
                 
                 # 전달 데이터인지 확인
-                if file_date >= last_month and file_date < today:
-                    if filename.startswith("unified_new_reviews_"):
-                        self.our_app_files.append(file)
-                    elif filename.startswith("heydealer_reviews_"):
-                        self.competitor_files.append(file)
+                if filename.startswith("kbchachacha_reviews_"):
+                    self.our_app_files.append(file)
+                elif filename.startswith("heydealer_reviews_"):
+                    self.competitor_files.append(file)
             except (IndexError, ValueError) as e:
                 print(f"파일명 형식 오류: {filename} - {e}")
                 continue
@@ -73,7 +70,7 @@ class ReviewAnalyzer:
                 our_app_df = pd.concat(our_app_dfs, ignore_index=True)
                 # 중복 제거: platform, author, content, updated 조합으로
                 our_app_df.drop_duplicates(
-                    subset=['platform', 'author', 'content', 'updated'], 
+                    subset=['platform', 'author', 'content', 'date', 'ap_version'], 
                     keep='first', 
                     inplace=True
                 )
@@ -92,7 +89,7 @@ class ReviewAnalyzer:
                 competitor_df = pd.concat(competitor_dfs, ignore_index=True)
                 # 중복 제거
                 competitor_df.drop_duplicates(
-                    subset=['platform', 'author', 'content', 'updated'], 
+                    subset=['platform', 'author', 'content', 'date', 'ap_version'], 
                     keep='first', 
                     inplace=True
                 )
@@ -146,35 +143,34 @@ class ReviewAnalyzer:
         our_app_sample = our_app_df.head(200).to_dict('records') if len(our_app_df) > 0 else []
         competitor_sample = competitor_df.head(200).to_dict('records') if len(competitor_df) > 0 else []
         
-        prompt = f"""당신은 데이터 분석 보고서를 전문적으로 작성하는 애널리스트입니다. 아래 Android 및 iOS 리뷰 데이터를 분석하여 정확히 1페이지 분량의 리뷰 분석 보고서를 작성하세요.
+        prompt = f"""당신은 데이터 분석 보고서를 전문적으로 작성하는 애널리스트입니다.  
+아래 Android 및 iOS 리뷰 데이터를 기반으로 KB차차차(우리 서비스)의 리뷰를 먼저 분석하고, 이후 경쟁 서비스 HeyDealer와 비교하여 인사이트를 도출하는 1페이지 분량의 전문 리뷰 분석 보고서를 작성하세요.
 
 보고서 목표
-* 우리 서비스 앱 리뷰와 경쟁 서비스(유사 앱) 리뷰 데이터를 기반으로 종합 분석, 비교, 인사이트 도출을 한 페이지에 요약합니다.
+* 우리 서비스 KB차차차 앱 리뷰를 중심으로 먼저 분석한 뒤, 경쟁 서비스 HeyDealer 리뷰와 비교해 종합 인사이트를 도출합니다.
 * 보고서 형식은 반드시 아래 제공하는 템플릿을 그대로 따라 작성하세요.
 * 간결하지만 핵심 인사이트 중심의 전문 문체로 작성하세요.
 
 입력 데이터 형식
-Android 리뷰 데이터 속성
-* reviewId, userName, content, score, thumbsUpCount, at, replyContent, repliedAt, appVersion, platform, package_name, rating, author, updated
-
-iOS 리뷰 데이터 속성
-* platform, author, rating, title, content, updated, app_id, appVersion
+리뷰 데이터 속성
+* platform,author,rating,title,content,date,thumbs_up,developer_reply,app_identifier,ap_version
 
 보고서 템플릿 (이 형식을 반드시 그대로 사용)
 
 1. Executive Summary
-* 전체 리뷰 경향 요약
-* 경쟁 앱 대비 강점 2~3개
-* 개선 필요 영역 2~3개
-* 최근 리뷰 증가/감소 트렌드 요약
+* KB차차차 리뷰 기반 전체 경향 요약
+* KB차차차의 강점 2~3개
+* KB차차차의 개선 필요 영역 2~3개
+* 최근 리뷰 증가/감소 트렌드
+* 마지막 문단에서 HeyDealer 대비 핵심 차이 요약
 
 2. 데이터 개요
-* Android / iOS 리뷰 수
+* Android / iOS 리뷰 수 (KB차차차, HeyDealer)
 * 분석 대상 앱 목록
 * 수집 기간
 * 주요 데이터 속성
 
-3. 핵심 지표 비교 (우리 서비스 vs 경쟁사)
+3. 핵심 지표 비교 (KB차차차 vs HeyDealer)
 * 플랫폼별 평균 평점
 * 월간 리뷰 변화율
 * 버전별 평점 변화
@@ -182,20 +178,20 @@ iOS 리뷰 데이터 속성
 * 표 형태로 비교
 
 4. 리뷰 내용 분석
-* 긍정 리뷰 주요 키워드
-* 부정 리뷰 주요 키워드
+* KB차차차 긍정 리뷰 주요 키워드
+* KB차차차 부정 리뷰 주요 키워드
 * 감성 비율(긍정/중립/부정)
-* 경쟁 앱 대비 텍스트 패턴 차이
+* HeyDealer 대비 텍스트 패턴 차이 및 특징
 
 5. 버전별/업데이트별 이슈
-* 특정 버전 이후 불만 증가 여부
+* KB차차차 특정 버전 이후 불만 증가 여부
 * 평점 변동 포인트
-* 경쟁사와 다른 점
+* HeyDealer와 비교했을 때 발견되는 차이점
 
 6. 개선 제안
-* 기능 개선
+* KB차차차 기능 개선 제안
 * 운영/고객센터 대응 개선
-* 경쟁사 대비 차별화 전략
+* HeyDealer 대비 차별화 전략
 
 출력 형식 규칙
 * 전체 분량은 "A4 한 페이지" 기준으로 요약
@@ -206,14 +202,14 @@ iOS 리뷰 데이터 속성
 * 최종 결과만 말하고, 과정 설명 없음
 
 === 데이터 요약 ===
-[우리 회사 앱]
+[KB차차차 (우리 회사 앱)]
 - 총 리뷰 수: {summary['our_app']['total']}
 - Android 리뷰: {summary['our_app']['android']}건
 - iOS 리뷰: {summary['our_app']['ios']}건
 - Android 앱: {', '.join(summary['our_app']['android_apps'][:3])}
 - iOS 앱: {', '.join(summary['our_app']['ios_apps'][:3])}
 
-[경쟁사 앱]
+[HeyDealer (경쟁사 앱)]
 - 총 리뷰 수: {summary['competitor']['total']}
 - Android 리뷰: {summary['competitor']['android']}건
 - iOS 리뷰: {summary['competitor']['ios']}건
@@ -222,13 +218,14 @@ iOS 리뷰 데이터 속성
 
 수집 기간: {summary['date_range']['start']} ~ {summary['date_range']['end']}
 
-=== 우리 회사 앱 리뷰 샘플 데이터 (최대 200건) ===
+=== KB차차차 리뷰 샘플 (최대 200건) ===
 {json.dumps(our_app_sample, ensure_ascii=False, indent=2)}
 
-=== 경쟁사 앱 리뷰 샘플 데이터 (최대 200건) ===
+=== HeyDealer 리뷰 샘플 (최대 200건) ===
 {json.dumps(competitor_sample, ensure_ascii=False, indent=2)}
 
-위 데이터를 기반으로 우리 회사 앱과 경쟁사 앱을 비교 분석한 1페이지 분량의 전문 분석 보고서를 작성하세요."""
+위 데이터를 기반으로 KB차차차를 중심으로 분석하고, 후반부에 HeyDealer와 비교한 1페이지 분량의 전문 리뷰 분석 보고서를 작성하세요.
+"""
 
         return prompt
     
@@ -247,7 +244,7 @@ iOS 리뷰 데이터 속성
         print(f"프롬프트 길이: {len(prompt)} 문자")
         
         try:
-            response = requests.post(url, json=payload, timeout=300)
+            response = requests.post(url, json=payload, timeout=900)
             response.raise_for_status()
             
             result = response.json()
@@ -342,6 +339,6 @@ if __name__ == "__main__":
     # model 옵션: "llama3.2:latest", "llama3:latest", "mistral:latest" 등
     # delete_files=True: 처리 후 파일 삭제, False: 파일 유지
     analyzer.run(
-        model="llama3.2:latest",
+        model="gpt-oss:latest",
         delete_files=True
     )

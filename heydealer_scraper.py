@@ -53,6 +53,8 @@ class UnifiedReviewMonitor:
         
         self.data_dir = Path("unified_review_data")
         self.data_dir.mkdir(exist_ok=True)
+        self.resorce_dir = Path("heydealer")
+        self.resorce_dir.mkdir(exist_ok=True)
         
         # 기존 리뷰 ID 로드
         self._load_seen_reviews()
@@ -60,7 +62,7 @@ class UnifiedReviewMonitor:
     def _load_seen_reviews(self) -> None:
         """기존에 확인한 리뷰 ID들을 로드합니다."""
         for platform in ['ios', 'android']:
-            seen_file = self.data_dir / f"seen_{platform}_reviews.json"
+            seen_file = self.resorce_dir / f"seen_{platform}_reviews.json"
             if seen_file.exists():
                 try:
                     with open(seen_file, 'r', encoding='utf-8') as f:
@@ -72,7 +74,7 @@ class UnifiedReviewMonitor:
     def _save_seen_reviews(self) -> None:
         """확인한 리뷰 ID들을 저장합니다."""
         for platform in ['ios', 'android']:
-            seen_file = self.data_dir / f"seen_{platform}_reviews.json"
+            seen_file = self.resorce_dir / f"seen_{platform}_reviews.json"
 
             try:
                 with open(seen_file, 'w', encoding='utf-8') as f:
@@ -116,7 +118,8 @@ class UnifiedReviewMonitor:
                         "content": entry['content']['label'],
                         "updated": entry['updated']['label'],
                         "app_id": self.ios_app_id,
-                        "appVersion": ""
+                        "thumbs_up": entry['im:voteSum']['label'],
+                        "appVersion": entry['im:version']['label'],
                     }
                     reviews.append(review)
                 except KeyError:
@@ -217,7 +220,7 @@ class UnifiedReviewMonitor:
                 else:  # android
                     df["at"] = pd.to_datetime(df["at"])
                 
-                filename = self.data_dir / f"new_{platform}_reviews_{timestamp}.csv"
+                filename = self.resorce_dir / f"new_{platform}_reviews_{timestamp}.csv"
                 df.to_csv(filename, index=False, encoding="utf-8-sig")
                 print(f"[{platform.upper()}] 새로운 리뷰 {len(reviews)}개가 '{filename}'에 저장되었습니다.")
     

@@ -18,6 +18,7 @@ for r in entries:
         "title": r['title']['label'],
         "content": r['content']['label'],
         "updated": r['updated']['label'],
+        "appVersion": r['im:version']['label'],
     })
 
 df = pd.DataFrame(data)
