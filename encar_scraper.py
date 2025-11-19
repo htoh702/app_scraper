@@ -53,7 +53,7 @@ class UnifiedReviewMonitor:
         
         self.data_dir = Path("unified_review_data")
         self.data_dir.mkdir(exist_ok=True)
-        self.resorce_dir = Path("heydealer")
+        self.resorce_dir = Path("encar")
         self.resorce_dir.mkdir(exist_ok=True)
         
         # 기존 리뷰 ID 로드
@@ -265,7 +265,7 @@ class UnifiedReviewMonitor:
             df = df.sort_values("date", ascending=False)
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = self.data_dir / f"heydealer_reviews_{timestamp}.csv"
+            filename = self.data_dir / f"encar_reviews_{timestamp}.csv"
             df.to_csv(filename, index=False, encoding="utf-8-sig")
             print(f"[통합] 새로운 리뷰 {len(all_new_reviews)}개가 '{filename}'에 저장되었습니다.")
     
@@ -325,8 +325,8 @@ def main():
     print("=" * 60)
     
     # 앱 설정
-    IOS_APP_ID = "980166975"  # iOS
-    ANDROID_PACKAGE_NAME = "kr.perfectree.heydealer"  # Android
+    IOS_APP_ID = "404512755"  # iOS
+    ANDROID_PACKAGE_NAME = "com.encar.encarMobileApp"  # Android
     
     # 모니터링 설정
     CHECK_INTERVAL = 300  # 5분

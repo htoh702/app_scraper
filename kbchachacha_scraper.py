@@ -239,7 +239,8 @@ class UnifiedReviewMonitor:
                 "date": pd.to_datetime(review["updated"]).strftime('%Y-%m-%d %H:%M:%S'),
                 "thumbs_up": None,
                 "developer_reply": None,
-                "app_identifier": review["app_id"]
+                "app_identifier": review["app_id"],
+                "ap_version": review.get("appVersion", "")
             }
             all_new_reviews.append(unified_review)
         
