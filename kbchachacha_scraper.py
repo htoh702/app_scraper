@@ -142,7 +142,7 @@ class UnifiedReviewMonitor:
                 lang=self.lang,
                 country=self.country,
                 sort=Sort.NEWEST,
-                count=200
+                count=1000
             )
             
             google_reviews = []
