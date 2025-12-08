@@ -22,7 +22,7 @@ except ImportError:
 class SlackNotifier:
     """Slack 알림 관리 클래스"""
     
-    def __init__(self, webhook_url: str = None, channel: str = None, username: str = "오현택"):
+    def __init__(self, webhook_url: str = None, channel: str = None, username: str = "ReviewMe"):
         """
         Slack 알림 설정
         
@@ -71,11 +71,11 @@ class SlackNotifier:
     def format_review_attachment(self, review: Dict, platform: str) -> Dict:
         """리뷰 정보를 Slack attachment 형태로 포맷합니다."""
         # 플랫폼별 이모지
-        platform_emoji = "📱" if platform == "iOS" else "🤖"
+        platform_emoji = "Android" if platform == "iOS" else "IOS"
         
         # 별점 시각화
         rating = review.get("rating") or review.get("score", 0)
-        stars = "⭐" * rating + "☆" * (5 - rating)
+        stars = "rating" * rating + "☆" * (5 - rating)
         
         # 색상 설정 (평점에 따라)
         if rating >= 4:
@@ -101,7 +101,7 @@ class SlackNotifier:
         # Attachment 구성
         attachment = {
             "color": color,
-            "author_name": f"{platform_emoji} {platform} App Store",
+            "author_name": f"{platform} App Store",
             "title": f"{stars} ({rating}/5) - {author}",
             "text": content,
             "fields": [
@@ -127,7 +127,7 @@ class SlackNotifier:
             if review.get("thumbsUpCount", 0) > 0:
                 attachment["fields"].append({
                     "title": "좋아요",
-                    "value": f"👍 {review['thumbsUpCount']}",
+                    "value": f"{review['thumbsUpCount']}",
                     "short": True
                 })
             
@@ -135,7 +135,7 @@ class SlackNotifier:
                 reply = review["replyContent"][:200] + ("..." if len(review["replyContent"]) > 200 else "")
                 attachment["fields"].append({
                     "title": "개발자 답변",
-                    "value": f"🏢 {reply}",
+                    "value": f"{reply}",
                     "short": False
                 })
         
@@ -151,12 +151,12 @@ class SlackNotifier:
             return True
         
         # 메인 메시지
-        main_message = f"🔔 *새로운 앱 리뷰 {total_count}개가 등록되었습니다!*"
+        main_message = f"*새로운 앱 리뷰 {total_count}개가 등록되었습니다!*"
         
         # 요약 정보
         summary_attachment = {
             "color": "good" if stats["avg_rating"] >= 4 else "warning" if stats["avg_rating"] >= 3 else "danger",
-            "title": "📊 리뷰 요약",
+            "title": "리뷰 요약",
             "fields": [
                 {
                     "title": "총 리뷰 수",
@@ -165,16 +165,16 @@ class SlackNotifier:
                 },
                 {
                     "title": "전체 평균 평점",
-                    "value": f"⭐ {stats['avg_rating']:.1f}/5.0",
+                    "value": f"Rating {stats['avg_rating']:.1f}/5.0",
                     "short": True
                 },
                 {
-                    "title": "📱 iOS",
+                    "title": "iOS",
                     "value": f"{stats['ios_count']}개",
                     "short": True
                 },
                 {
-                    "title": "🤖 Android",
+                    "title": "Android",
                     "value": f"{stats['android_count']}개",
                     "short": True
                 }
@@ -185,7 +185,7 @@ class SlackNotifier:
         for platform, rating in stats["platform_ratings"].items():
             summary_attachment["fields"].append({
                 "title": f"{platform} 평균",
-                "value": f"⭐ {rating:.1f}/5.0",
+                "value": f"Rating {rating:.1f}/5.0",
                 "short": True
             })
         
@@ -209,7 +209,7 @@ class SlackNotifier:
         if total_count > max_reviews:
             attachments.append({
                 "color": "#36a64f",
-                "text": f"📋 총 {total_count}개 중 {max_reviews}개만 표시됩니다. 전체 리뷰는 저장된 파일을 확인하세요."
+                "text": f"총 {total_count}개 중 {max_reviews}개만 표시됩니다. 전체 리뷰는 저장된 파일을 확인하세요."
             })
         
         return self.send_message(main_message, attachments)
@@ -219,7 +219,7 @@ class SlackNotifier:
         if not self.enabled:
             return False
         
-        return self.send_message(f"🤖 {message}")
+        return self.send_message(f"{message}")
 
 
 class UnifiedReviewMonitor:
@@ -648,8 +648,8 @@ class UnifiedReviewMonitor:
             print(f"⏰ 총 실행시간: {(datetime.now() - start_time).total_seconds() / 3600:.1f}시간")
             
             # 모니터링 중단 알림
-            stop_message = f"모니터링이 사용자에 의해 중단되었습니다. (총 체크: {check_count}회)"
-            self.slack_notifier.send_monitoring_status(stop_message)
+            # stop_message = f"모니터링이 사용자에 의해 중단되었습니다. (총 체크: {check_count}회)"
+            # self.slack_notifier.send_monitoring_status(stop_message)
 
 
 def main():
@@ -667,7 +667,7 @@ def main():
     SAVE_UNIFIED = True   # 통합 파일 저장 여부
     
     # Slack 설정 - 여기에 Webhook URL을 직접 입력하세요
-    SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"  # 실제 Webhook URL로 변경
+    SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"  # 실제 Webhook URL로 변경
     SLACK_CHANNEL = "앱리뷰-알림채널"  # 원하는 채널명으로 변경 (옵션)
     
 
